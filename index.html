@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RESERVED — Restaurant Manager</title>
+  <link rel="icon" type="image/jpeg" href="logo.jpg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ══ LOGIN ═══════════════════════════════════════════════ -->
+<div id="loginScreen" class="login-screen active">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="logo.jpg" alt="RESERVED Logo"
+        style="width:160px;height:160px;object-fit:contain;border-radius:16px;" />
+    </div>
+    <p class="login-subtitle">Restaurant Stock &amp; Finance Manager</p>
+    <form id="loginForm" class="login-form">
+      <div id="loginError" class="login-error" style="display:none;"></div>
+      <div class="form-row">
+        <label for="loginUsername">Username</label>
+        <input type="text" id="loginUsername" placeholder="Enter username" required autofocus autocomplete="username" />
+      </div>
+      <div class="form-row">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter password" required autocomplete="current-password" />
+      </div>
+      <div class="form-row">
+        <label class="checkbox">
+          <input type="checkbox" id="loginRemember" /> Remember me
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+      <div class="login-links">
+        <a href="#" id="forgotPasswordLink" class="forgot-password-link">Forgot Password?</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ APP ═════════════════════════════════════════════════ -->
+<div id="appMain" class="app-main hidden">
+
+  <header class="app-header">
+    <div class="brand">
+      <img src="logo.jpg" alt="RESERVED"
+        style="height:48px;width:48px;object-fit:contain;border-radius:8px;flex-shrink:0;" />
+      <div>
+        <div class="app-name">RESERVED</div>
+        <div class="app-tagline">Restaurant Manager</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="themeToggle" class="btn btn-ghost btn-sm">◑ Contrast</button>
+      <button id="backupExportBtn" class="btn btn-secondary btn-sm">💾 Backup</button>
+      <label for="backupImportInput" class="btn btn-secondary btn-sm">📂 Restore</label>
+      <input id="backupImportInput" type="file" accept="application/json" class="file-input" />
+      <button id="logoutBtn" class="btn btn-ghost btn-sm">↩ Logout</button>
+    </div>
+  </header>
+
+  <div class="app-shell">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <ul class="nav-list">
+        <li><button class="nav-link active" data-section="dashboard">📊 Dashboard</button></li>
+        <li><button class="nav-link" data-section="inventory" data-type="kitchen">🍳 Kitchen</button></li>
+        <li><button class="nav-link" data-section="inventory" data-type="beverage">🥤 Beverage</button></li>
+        <li><button class="nav-link" data-section="inventory" data-type="stockroom">📦 Stock Room</button></li>
+        <li><button class="nav-link" data-section="inventory" data-type="pastry">🥐 Pastry</button></li>
+        <li><button class="nav-link" data-section="inventory" data-type="takeout">🥡 Takeout</button></li>
+        <li><button class="nav-link" data-section="menu">🍽️ Menu</button></li>
+        <li><button class="nav-link" data-section="sales">💰 Sales</button></li>
+        <li><button class="nav-link" data-section="expenses">🧾 Expenses</button></li>
+        <li><button class="nav-link" data-section="staff">👥 Staff</button></li>
+        <li><button class="nav-link" data-section="reports">📈 Reports</button></li>
+        <li><button class="nav-link" data-section="discountlog">🏷️ Discount Log</button></li>
+        <li><button class="nav-link" data-section="settings">⚙️ Settings</button></li>
+      </ul>
+    </nav>
+
+    <main class="content">
+
+      <!-- ══ DASHBOARD ══════════════════════════════════════ -->
+      <section id="dashboard" class="section active">
+        <div class="section-header">
+          <h2>Dashboard</h2>
+          <div class="section-actions">
+            <span id="dashDateLabel" style="font-size:13px;color:var(--muted);"></span>
+            <button id="dashPrintBtn" class="btn btn-secondary btn-sm">🖨️ Print</button>
+          </div>
+        </div>
+
+        <!-- Dashboard date filter -->
+        <div class="dash-filter-bar">
+          <span class="dash-filter-label">📅 Filter by date:</span>
+          <label style="font-size:12px;color:var(--muted);">From</label>
+          <input type="date" id="dashFilterStart" />
+          <label style="font-size:12px;color:var(--muted);">To</label>
+          <input type="date" id="dashFilterEnd" />
+          <button id="dashFilterApply" class="btn btn-primary btn-sm">Apply</button>
+          <button id="dashFilterClear" class="btn btn-ghost btn-sm">Clear</button>
+        </div>
+
+        <!-- Filtered result strip (shown only when filter is active) -->
+        <div id="dashFilteredStrip" class="dash-filtered-strip" style="display:none;">
+          <div class="dash-strip-label" id="dashStripLabel">Filtered Results</div>
+          <div class="dash-strip-kpis">
+            <div class="strip-kpi"><div class="strip-kpi-title">Revenue</div><div id="stripRevenue" class="strip-kpi-value">₱0.00</div></div>
+            <div class="strip-kpi"><div class="strip-kpi-title">Gross Profit</div><div id="stripGP" class="strip-kpi-value green">₱0.00</div></div>
+            <div class="strip-kpi"><div class="strip-kpi-title">Expenses</div><div id="stripExp" class="strip-kpi-value red">₱0.00</div></div>
+            <div class="strip-kpi"><div class="strip-kpi-title">Net Profit</div><div id="stripNP" class="strip-kpi-value">₱0.00</div></div>
+            <div class="strip-kpi"><div class="strip-kpi-title">Transactions</div><div id="stripTxn" class="strip-kpi-value">0</div></div>
+          </div>
+        </div>
+
+        <p class="section-label">📈 Sales</p>
+        <div class="kpi-grid">
+          <div class="card kpi"><div class="kpi-title">Today</div><div id="kpiTodaySales" class="kpi-value">₱0.00</div></div>
+          <div class="card kpi"><div class="kpi-title">This Week</div><div id="kpiWeekSales" class="kpi-value">₱0.00</div></div>
+          <div class="card kpi"><div class="kpi-title">This Month</div><div id="kpiMonthSales" class="kpi-value">₱0.00</div></div>
+          <div class="card kpi"><div class="kpi-title">This Year</div><div id="kpiYearSales" class="kpi-value">₱0.00</div></div>
+          <div class="card kpi"><div class="kpi-title">Today GP</div><div id="kpiTodayGP" class="kpi-value">₱0.00</div></div>
+        </div>
+
+        <p class="section-label">💸 Expenses &amp; Profit</p>
+        <div class="kpi-grid">
+          <div class="card kpi kpi-red"><div class="kpi-title">Month Expenses</div><div id="kpiMonthExpenses" class="kpi-value">₱0.00</div></div>
+          <div class="card kpi kpi-red"><div class="kpi-title">Year Expenses</div><div id="kpiYearExpenses" class="kpi-value">₱0.00</div></div>
+          <div class="card kpi"><div class="kpi-title">Net Profit (Month)</div><div id="kpiMonthNP" class="kpi-value">₱0.00</div></div>
+          <div class="card kpi"><div class="kpi-title">Net Profit (Year)</div><div id="kpiYearNP" class="kpi-value">₱0.00</div></div>
+          <div class="card kpi"><div class="kpi-title">Stock Value</div><div id="kpiStockValue" class="kpi-value">₱0.00</div></div>
+        </div>
+
+        <div class="card chart-card" style="margin-bottom:16px;">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <span id="dashChartLabel">Sales vs Expenses — Jan to Dec</span>
+            <select id="dashChartYear" style="font-size:13px;font-weight:600;padding:3px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;"></select>
+          </div>
+          <canvas id="salesExpensesChart"></canvas>
+        </div>
+
+        <div class="card">
+          <div class="card-header">⚠️ Low Stock Alerts</div>
+          <ul id="alertList" class="alert-list"><li class="ok">✅ All stock levels are good</li></ul>
+        </div>
+      </section>
+
+      <!-- ══ INVENTORY ══════════════════════════════════════ -->
+      <section id="inventory" class="section">
+        <div class="section-header">
+          <h2 id="inventoryTitle">Inventory</h2>
+          <div class="section-actions">
+            <button id="addItemBtn" class="btn btn-primary">+ Add Item</button>
+            <button id="exportInventoryCsv" class="btn btn-secondary">⬇ Export CSV</button>
+            <button id="printInventoryBtn" class="btn btn-secondary btn-sm">🖨️ Print</button>
+            <label for="importInventoryCsv" class="btn btn-secondary">⬆ Import CSV</label>
+            <input id="importInventoryCsv" type="file" accept="text/csv" class="file-input" />
+          </div>
+        </div>
+
+        <div class="filters">
+          <input type="search" id="invSearch" placeholder="🔍 Search items…" style="max-width:200px;" />
+          <select id="invFilterCategory" style="max-width:160px;"><option value="">All Categories</option></select>
+          <select id="invFilterSupplier" style="max-width:160px;"><option value="">All Suppliers</option></select>
+          <label class="checkbox"><input type="checkbox" id="invFilterLowStock" /> Low stock only</label>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Item Name</th><th>Category</th><th>Unit</th>
+                <th>Stock Qty</th><th>Reorder Lvl</th>
+                <th>Cost</th><th>Sell</th>
+                <th>Supplier</th><th>Supplier Use</th>
+                <th>Last Updated</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTbody" class="zebra"></tbody>
+          </table>
+        </div>
+
+        <!-- Stock Movement Log -->
+        <div class="section-subheader">
+          <h3>📋 Stock Movement Log</h3>
+          <div class="filters" style="margin:0;">
+            <select id="logFilterItem" style="max-width:160px;"><option value="">All Items</option></select>
+            <select id="logFilterType" style="max-width:140px;">
+              <option value="">All Types</option>
+              <option value="in">📥 Stock In</option>
+              <option value="out">📤 Manual Out</option>
+              <option value="sale">🛒 Sale</option>
+            </select>
+            <select id="logFilterMonth" style="max-width:180px;"></select>
+            <button id="logFilterAll" class="btn btn-ghost btn-sm">Show All</button>
+            <input type="date" id="logFilterStart" style="display:none;">
+            <input type="date" id="logFilterEnd" style="display:none;">
+            <button id="exportLogCsv" class="btn btn-secondary btn-sm">⬇ Export</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr><th>Date &amp; Time</th><th>Item</th><th>Type</th><th>Qty Change</th><th>Balance After</th><th>Note</th><th>Done By</th></tr>
+            </thead>
+            <tbody id="stockLogTbody" class="zebra"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══ MENU ═══════════════════════════════════════════ -->
+      <section id="menu" class="section">
+        <div class="section-header">
+          <h2>🍽️ Menu</h2>
+          <div class="section-actions">
+            <button id="addMenuProductBtn" class="btn btn-primary">+ Add Product</button>
+          </div>
+        </div>
+
+        <!-- Menu tabs -->
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="menuPosTab">🛒 Order / POS</button>
+          <button class="tab-btn" data-tab="menuManageTab">📋 Manage Products</button>
+        </div>
+
+        <!-- POS Tab -->
+        <div id="menuPosTab" class="tab-panel active">
+          <div class="menu-layout">
+            <div class="menu-board-col">
+              <div class="filters" style="margin-bottom:12px;">
+                <input type="search" id="menuSearch" placeholder="🔍 Search products…" style="max-width:220px;" />
+                <select id="menuFilterCat"><option value="">All Categories</option></select>
+              </div>
+              <div id="menuBoard"></div>
+            </div>
+
+            <div class="menu-order-col">
+              <div class="card menu-order-card">
+                <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                  <span>🧾 Current Order</span>
+                  <span id="menuOrderCount">0 items</span>
+                </div>
+
+                <!-- Meta: table note, date, order type -->
+                <div class="pos-meta-section">
+                  <div class="pos-field pos-field-full">
+                    <label for="menuOrderNote">Table / Customer</label>
+                    <input id="menuOrderNote" type="text" placeholder="e.g. Table 3, Take-out, John" />
+                  </div>
+                  <div class="pos-field">
+                    <label for="menuSaleDate">Sale Date</label>
+                    <input id="menuSaleDate" type="date" />
+                  </div>
+                  <div class="pos-field">
+                    <label for="menuOrderType">Order Type</label>
+                    <select id="menuOrderType">
+                      <option value="Walk-in">Walk-in</option>
+                      <option value="Take-out">Take-out</option>
+                      <option value="Delivery">Delivery</option>
+                      <option value="Online">Online</option>
+                    </select>
+                  </div>
+                  <div class="pos-field">
+                    <label for="menuPaymentMethod">Mode of Payment</label>
+                    <select id="menuPaymentMethod">
+                      <option value="Cash">💵 Cash</option>
+                      <option value="Card">💳 Card</option>
+                      <option value="QRPH">📱 QRPH</option>
+                      <option value="GCash">📲 GCash</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Order lines -->
+                <div id="menuOrderLines"></div>
+
+                <!-- Discount + service charge + VAT -->
+                <div class="pos-charges-section">
+                  <!-- Discount row -->
+                  <div class="pos-charges-row">
+                    <div class="pos-field">
+                      <label for="menuDiscountType">Discount Type</label>
+                      <select id="menuDiscountType">
+                        <option value="none">No Discount</option>
+                        <option value="percent">Percentage (%)</option>
+                        <option value="fixed">Fixed Amount (₱)</option>
+                        <option value="senior">Senior / PWD (20%)</option>
+                        <option value="other">Other (Custom)</option>
+                      </select>
+                    </div>
+                    <div class="pos-field" id="menuDiscountValueWrap">
+                      <label for="menuDiscountValue">Discount Value</label>
+                      <input id="menuDiscountValue" type="number" min="0" step="0.01" value="0" />
+                    </div>
+                  </div>
+                  <!-- Custom discount label -->
+                  <div class="pos-field" id="menuDiscountCustomLabelWrap" style="display:none;">
+                    <label for="menuDiscountCustomLabel">Discount Label / Reason</label>
+                    <input id="menuDiscountCustomLabel" type="text" placeholder="e.g. Employee Discount, Loyalty Card" />
+                  </div>
+                  <!-- Service charge row -->
+                  <div class="pos-charges-row">
+                    <div class="pos-field">
+                      <label for="menuServiceChargeType">Service Charge</label>
+                      <select id="menuServiceChargeType">
+                        <option value="none">No Service Charge</option>
+                        <option value="percent">Percentage (%)</option>
+                        <option value="fixed">Fixed Amount (₱)</option>
+                      </select>
+                    </div>
+                    <div class="pos-field" id="menuServiceChargeValueWrap">
+                      <label for="menuServiceChargeValue">Charge Value</label>
+                      <input id="menuServiceChargeValue" type="number" min="0" step="0.01" value="0" />
+                    </div>
+                  </div>
+                  <!-- VAT toggle -->
+                  <label class="pos-vat-toggle">
+                    <input id="menuIncludeVat" type="checkbox" />
+                    Include VAT (12%)
+                  </label>
+                </div>
+
+                <!-- Totals -->
+                <div class="pos-totals-section">
+                  <div class="pos-totals-box">
+                    <div class="pos-total-row">
+                      <span class="pos-total-label">Subtotal</span>
+                      <span class="pos-total-val" id="menuSubtotal">₱0.00</span>
+                    </div>
+                    <div class="pos-total-row" id="menuItemDiscountRow" style="display:none;">
+                      <span class="pos-total-label">Item Discounts</span>
+                      <span class="pos-total-val" style="color:var(--red);" id="menuItemDiscountAmt">−₱0.00</span>
+                    </div>
+                    <div class="pos-total-row pos-discount-row" id="menuDiscountRow" style="display:none;">
+                      <span class="pos-total-label" id="menuDiscountLabel">Discount</span>
+                      <span class="pos-total-val" id="menuDiscountAmt">−₱0.00</span>
+                    </div>
+                    <div class="pos-total-row" id="menuServiceChargeRow" style="display:none;">
+                      <span class="pos-total-label">Service Charge</span>
+                      <span class="pos-total-val" id="menuServiceChargeAmt">₱0.00</span>
+                    </div>
+                    <div class="pos-total-row" id="menuVatRow" style="display:none;">
+                      <span class="pos-total-label">VAT (12%)</span>
+                      <span class="pos-total-val" id="menuVatAmt">₱0.00</span>
+                    </div>
+                    <div class="pos-total-row pos-total-final">
+                      <span class="pos-total-label">TOTAL</span>
+                      <span class="pos-total-val" id="menuTotal">₱0.00</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div id="menuReceiptNote" style="display:none;background:var(--green-bg);padding:10px 18px;font-size:13px;color:var(--green);font-weight:600;border-top:1px solid #A5D6A7;"></div>
+                <div class="pos-actions-section">
+                  <button id="menuRecordSaleBtn" class="btn btn-primary">✅ Record Sale</button>
+                  <button id="menuPrintReceiptBtn" class="btn btn-secondary">🖨️ Print Receipt</button>
+                  <button id="menuClearOrderBtn" class="btn btn-ghost btn-sm">🗑️ Clear Order</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Manage Tab -->
+        <div id="menuManageTab" class="tab-panel">
+          <!-- Search + filter bar -->
+          <div class="filters" style="margin:10px 0 8px;gap:8px;">
+            <input type="search" id="manageProductSearch"
+              placeholder="🔍 Search product name…"
+              style="max-width:260px;" />
+            <select id="manageProductCatFilter" style="max-width:180px;">
+              <option value="">All Categories</option>
+            </select>
+            <span id="manageProductCount" style="font-size:12px;color:var(--muted);align-self:center;margin-left:auto;"></span>
+          </div>
+          <div class="table-wrapper" style="margin-top:0;">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Product Name</th><th>Category</th><th>Price (₱)</th>
+                  <th>Description</th><th>Ingredients</th><th>Available</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="menuProductsTbody" class="zebra"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADD/EDIT MENU PRODUCT DIALOG -->
+      <dialog id="menuProductDialog" style="max-width:660px;width:96vw;">
+        <h3 id="menuProductDialogTitle">Add Menu Product</h3>
+        <form id="menuProductForm">
+          <div class="form-grid">
+            <div class="form-row">
+              <label for="mpName">Product Name *</label>
+              <input id="mpName" required placeholder="e.g. Grilled Chicken, Iced Coffee" />
+            </div>
+            <div class="form-row">
+              <label for="mpCategory">Category *</label>
+              <input id="mpCategory" required list="menuCategoryList" placeholder="e.g. Main Course, Drinks" />
+            </div>
+            <div class="form-row">
+              <label for="mpPrice">Selling Price (₱) *</label>
+              <input type="number" id="mpPrice" step="0.01" min="0" required placeholder="0.00" />
+            </div>
+            <div class="form-row">
+              <label for="mpDescription">Description (optional)</label>
+              <input id="mpDescription" placeholder="Short description shown on receipt" />
+            </div>
+            <div class="form-row" style="align-items:center;">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                <input type="checkbox" id="mpAvailable" checked />
+                Available / Show on menu
+              </label>
+            </div>
+          </div>
+          <!-- Ingredients / Recipe -->
+          <div class="recipe-section">
+            <div class="recipe-section-header">
+              <div>
+                <strong>🧂 Ingredients / Recipe</strong>
+                <span class="recipe-hint">Linked ingredients are auto-deducted from inventory on each sale</span>
+              </div>
+              <button type="button" id="addIngredientBtn" class="btn btn-secondary btn-sm">+ Add Ingredient</button>
+            </div>
+            <div id="ingredientRows"></div>
+            <p id="ingredientEmptyMsg" style="font-size:12px;color:var(--muted);margin:6px 0 0;">No ingredients yet. Click "+ Add Ingredient" to link inventory items to this product.</p>
+          </div>
+          <div class="form-actions" style="margin-top:16px;">
+            <button type="submit" class="btn btn-primary">💾 Save Product</button>
+            <button type="button" id="menuProductDialogCancel" class="btn btn-secondary">Cancel</button>
+          </div>
+          <input type="hidden" id="mpId" />
+        </form>
+      </dialog>
+      <datalist id="menuCategoryList"></datalist>
+
+            <!-- ══ SALES ══════════════════════════════════════════ -->
+      <section id="sales" class="section">
+        <div class="section-header"><h2>Sales</h2><div class="section-actions"><button id="printSalesBtn" class="btn btn-secondary btn-sm">🖨️ Print View</button></div></div>
+
+
+
+        <!-- Sales Tabs -->
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="salesHistory">History</button>
+          <button class="tab-btn" data-tab="salesWeekly">Weekly</button>
+          <button class="tab-btn" data-tab="salesMonthly">Monthly</button>
+          <button class="tab-btn" data-tab="salesYearly">Yearly</button>
+          <button class="tab-btn" data-tab="salesPerItem">Per Item</button>
+        </div>
+
+        <div id="salesHistory" class="tab-panel active">
+          <div class="filters">
+            <select id="salesFilterMonth" style="max-width:180px;"></select>
+            <button id="salesFilterAll" class="btn btn-ghost btn-sm">Show All</button>
+            <input type="date" id="salesFilterStart" style="display:none;">
+            <input type="date" id="salesFilterEnd" style="display:none;">
+            <input type="search" id="salesFilterItem" placeholder="Search by item…" style="max-width:180px;" />
+            <button id="exportSalesCsv" class="btn btn-secondary btn-sm">⬇ Export CSV</button>
+          </div>
+          <div class="table-wrapper">
+            <table class="table">
+              <thead><tr><th>Time</th><th>Items Sold</th><th>Revenue</th><th>COGS</th><th>Gross Profit</th><th>Discount</th><th>Service Charge</th><th>MOP</th><th>Done By</th><th>Action</th></tr></thead>
+              <tbody id="salesTbody" class="zebra"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="salesWeekly" class="tab-panel">
+          <div class="table-wrapper" style="margin-top:8px;">
+            <table class="table">
+              <thead><tr><th>Week</th><th>Revenue</th><th>COGS</th><th>Gross Profit</th><th>Transactions</th></tr></thead>
+              <tbody id="salesWeeklyTbody" class="zebra"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="salesMonthly" class="tab-panel">
+          <div class="table-wrapper" style="margin-top:8px;">
+            <table class="table">
+              <thead><tr><th>Month</th><th>Revenue</th><th>COGS</th><th>Gross Profit</th><th>Transactions</th></tr></thead>
+              <tbody id="salesMonthlyTbody" class="zebra"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="salesYearly" class="tab-panel">
+          <div class="table-wrapper" style="margin-top:8px;">
+            <table class="table">
+              <thead><tr><th>Year</th><th>Revenue</th><th>COGS</th><th>Gross Profit</th><th>Transactions</th></tr></thead>
+              <tbody id="salesYearlyTbody" class="zebra"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="salesPerItem" class="tab-panel">
+          <div class="filters">
+            <label>From <input type="date" id="perItemStart" style="width:140px;"></label>
+            <label>To <input type="date" id="perItemEnd" style="width:140px;"></label>
+            <button id="perItemApply" class="btn btn-secondary btn-sm">Apply</button>
+            <button id="exportPerItemCsv" class="btn btn-secondary btn-sm">⬇ Export CSV</button>
+          </div>
+          <div class="table-wrapper">
+            <table class="table">
+              <thead><tr><th>Item</th><th>Category</th><th>Qty Sold</th><th>Revenue</th><th>COGS</th><th>Gross Profit</th></tr></thead>
+              <tbody id="salesPerItemTbody" class="zebra"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ EXPENSES ════════════════════════════════════════ -->
+      <section id="expenses" class="section">
+        <div class="section-header"><h2>Expenses</h2><div class="section-actions"><button id="printExpensesBtn" class="btn btn-secondary btn-sm">🖨️ Print</button></div></div>
+
+        <div class="form">
+          <div class="form-grid">
+            <div class="form-row">
+              <label for="expenseDate">Date</label>
+              <input type="date" id="expenseDate" required />
+            </div>
+            <div class="form-row">
+              <label for="expenseAccountType">Account Type</label>
+              <select id="expenseAccountType" required>
+                <option value="">Select…</option>
+                <option>Cash</option><option>Bank</option>
+                <option>Credit Card</option><option>GCash</option><option>Maya</option><option>Other</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label for="expenseCategory">Category / Particular</label>
+              <select id="expenseCategory" required>
+                <option value="">Select…</option>
+                <option>Labor</option><option>Utilities</option><option>Rent</option>
+                <option>Supplies</option><option>Marketing</option>
+                <option>Repairs &amp; Maintenance</option><option>Transportation</option>
+                <option>Tax</option><option>Other</option>
+              </select>
+            </div>
+            <div class="form-row" id="expenseCustomCategoryRow" style="display:none;">
+              <label for="expenseCustomCategory">Specify Category</label>
+              <input type="text" id="expenseCustomCategory" placeholder="Enter custom category" />
+            </div>
+            <div class="form-row">
+              <label for="expenseTin">TIN (optional)</label>
+              <input type="text" id="expenseTin" placeholder="123-456-789" />
+            </div>
+            <div class="form-row">
+              <label for="expenseAmount">Amount (₱)</label>
+              <input type="number" step="0.01" min="0" id="expenseAmount" required placeholder="0.00" />
+            </div>
+            <div class="form-row span-2">
+              <label for="expenseNote">Details / Notes</label>
+              <textarea id="expenseNote" rows="2" placeholder="Describe this expense…"></textarea>
+            </div>
+          </div>
+          <input type="hidden" id="expenseEditId" value="" />
+          <div class="form-actions">
+            <button type="button" id="expenseSubmitBtn" class="btn btn-primary">+ Add Expense</button>
+            <button type="button" id="expenseClearBtn" class="btn btn-secondary">✕ Clear</button>
+          </div>
+        </div>
+
+        <div class="section-subheader">
+          <h3>Expense History</h3>
+          <div class="filters" style="margin:0;">
+            <select id="expenseFilterMonth" style="max-width:200px;"></select>
+            <select id="expenseFilterCategory" style="max-width:160px;"><option value="">All Categories</option></select>
+            <select id="expenseFilterAccount" style="max-width:140px;"><option value="">All Accounts</option></select>
+            <button id="expenseFilterAll" class="btn btn-secondary btn-sm">All Time</button>
+            <button id="exportExpensesCsv" class="btn btn-secondary btn-sm">⬇ Export CSV</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr><th>Date</th><th>Account</th><th>Category</th><th>TIN</th><th>Amount</th><th>Details</th><th>Done By</th><th>Action</th></tr>
+            </thead>
+            <tbody id="expensesTbody" class="zebra"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="4"><strong>Total</strong></td>
+                <td id="expensesTotal" style="font-weight:700;color:var(--green);">₱0.00</td>
+                <td colspan="3"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══ STAFF ══════════════════════════════════════════ -->
+      <section id="staff" class="section">
+        <div class="section-header">
+          <h2>Staff</h2>
+          <button id="addStaffBtn" class="btn btn-primary">+ Add Staff</button>
+        </div>
+
+        <div class="table-wrapper" style="margin-bottom:24px;">
+          <table class="table">
+            <thead>
+              <tr><th>Name</th><th>Position</th><th>Type</th><th>Salary/Rate</th><th>Contact</th><th>Date Hired</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="staffTbody" class="zebra"></tbody>
+          </table>
+        </div>
+
+        <div class="section-subheader">
+          <h3>💳 Payroll</h3>
+          <div class="filters" style="margin:0;">
+            <select id="payrollStaffFilter" style="max-width:180px;"><option value="">All Staff</option></select>
+            <label>Month <input type="month" id="payrollMonth" style="width:140px;"></label>
+            <label>Cut-off
+              <select id="payrollCutoffFilter" style="width:110px;">
+                <option value="">All</option>
+                <option value="1">1st (1–15)</option>
+                <option value="2">2nd (16–end)</option>
+              </select>
+            </label>
+            <button id="addPayrollBtn" class="btn btn-primary btn-sm">+ Add Entry</button>
+            <button id="exportPayrollCsv" class="btn btn-secondary btn-sm">⬇ Export CSV</button>
+            <button id="printAllPayrollBtn" class="btn btn-secondary btn-sm">🖨️ Print All Payroll</button>
+            <button id="printAllPayslipsBtn" class="btn btn-secondary btn-sm">🧾 Print All Payslips</button>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table class="table">
+            <thead>
+              <tr><th>Staff</th><th>Cut-off Period</th><th>Hours</th><th>Base Pay</th><th>Overtime</th><th>Cash Advance</th><th>Deductions</th><th>Net Pay</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="payrollTbody" class="zebra"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="7"><strong>Total Net Pay</strong></td>
+                <td id="payrollTotal" style="font-weight:700;color:var(--green);">₱0.00</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+
+      <!-- ══ REPORTS ═════════════════════════════════════════ -->
+      <section id="reports" class="section">
+        <div class="section-header">
+          <h2>Reports</h2>
+          <div class="filters" style="margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div id="reportModeGroup" style="display:inline-flex;background:var(--bg);border:1.5px solid var(--border);border-radius:20px;padding:2px;gap:2px;">
+              <button type="button" id="reportModeMonthly" class="btn btn-sm" style="font-size:12px;padding:4px 12px;border-radius:16px;border:none;background:var(--green);color:#fff;cursor:pointer;font-weight:600;">Monthly</button>
+              <button type="button" id="reportModeWeekly" class="btn btn-sm" style="font-size:12px;padding:4px 12px;border-radius:16px;border:none;background:transparent;color:var(--text);cursor:pointer;font-weight:600;">Weekly</button>
+              <button type="button" id="reportModeCustom" class="btn btn-sm" style="font-size:12px;padding:4px 12px;border-radius:16px;border:none;background:transparent;color:var(--text);cursor:pointer;font-weight:600;">Custom</button>
+            </div>
+            <div id="reportMonthlyWrap" style="display:inline-flex;align-items:center;">
+              <select id="reportFilterMonth" style="min-width:180px;font-size:13px;font-weight:600;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;"></select>
+            </div>
+            <div id="reportWeeklyWrap" style="display:none;align-items:center;">
+              <select id="reportFilterWeek" style="min-width:240px;font-size:13px;font-weight:600;padding:5px 10px;border:1.5px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);cursor:pointer;"></select>
+            </div>
+            <div id="reportCustomWrap" style="display:none;align-items:center;gap:6px;">
+              <label style="font-size:12px;margin:0;">From <input type="date" id="reportStart" style="width:130px;"></label>
+              <label style="font-size:12px;margin:0;">To <input type="date" id="reportEnd" style="width:130px;"></label>
+              <button id="reportApply" class="btn btn-primary btn-sm">Apply</button>
+            </div>
+            <button id="reportExportCsv" class="btn btn-secondary btn-sm">⬇ Export CSV</button>
+            <button id="printReportsBtn" class="btn btn-secondary btn-sm">🖨️ Print</button>
+          </div>
+        </div>
+
+        <div class="kpi-grid" style="margin-bottom:16px;">
+          <div class="card kpi"><div class="kpi-title">Total Sales</div><div id="repSales" class="kpi-value">₱0.00</div></div>
+          <div class="card kpi"><div class="kpi-title">Gross Profit</div><div id="repGP" class="kpi-value">₱0.00</div></div>
+          <div class="card kpi kpi-red"><div class="kpi-title">Total Expenses</div><div id="repExpenses" class="kpi-value">₱0.00</div></div>
+          <div class="card kpi kpi-red"><div class="kpi-title">Total Payroll</div><div id="repPayroll" class="kpi-value">₱0.00</div></div>
+          <div class="card kpi"><div class="kpi-title">Net Profit</div><div id="repNP" class="kpi-value">₱0.00</div></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div class="card">
+            <div class="card-header">📅 Sales by Day</div>
+            <div class="table-wrapper" style="box-shadow:none;border:none;margin:0;max-height:280px;">
+              <table class="table" style="min-width:0;">
+                <thead><tr><th>Date</th><th>Revenue</th><th>GP</th><th>Sales</th></tr></thead>
+                <tbody id="repSalesBreakdownTbody" class="zebra"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">🗂️ Expenses by Category</div>
+            <div class="table-wrapper" style="box-shadow:none;border:none;margin:0;max-height:280px;">
+              <table class="table" style="min-width:0;">
+                <thead><tr><th>Category</th><th>Amount</th><th>%</th></tr></thead>
+                <tbody id="repExpensesByCatTbody" class="zebra"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <span>🏆 Top 10 Selling Items</span>
+            <div id="topItemsFilterBtns" style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="top-items-filter-btn btn btn-sm active-filter" data-filter="selected" style="font-size:12px;padding:4px 12px;border-radius:20px;border:1.5px solid var(--green);background:var(--green);color:#fff;cursor:pointer;font-weight:600;">Selected Dates</button>
+              <button class="top-items-filter-btn btn btn-sm" data-filter="week"  style="font-size:12px;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;font-weight:600;">This Week</button>
+              <button class="top-items-filter-btn btn btn-sm" data-filter="month" style="font-size:12px;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;font-weight:600;">This Month</button>
+              <button class="top-items-filter-btn btn btn-sm" data-filter="year"  style="font-size:12px;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;font-weight:600;">This Year</button>
+              <button class="top-items-filter-btn btn btn-sm" data-filter="all"   style="font-size:12px;padding:4px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;font-weight:600;">All Time</button>
+            </div>
+          </div>
+          <div id="topItemsPeriodLabel" style="font-size:11px;color:var(--muted);padding:6px 16px 0;"></div>
+          <div class="table-wrapper" style="box-shadow:none;border:none;margin:0;">
+            <table class="table">
+              <thead><tr><th>#</th><th>Item</th><th>Category</th><th>Qty Sold</th><th>Revenue</th><th>Gross Profit</th></tr></thead>
+              <tbody id="reportTopItemsTbody" class="zebra"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ DISCOUNT LOG ══════════════════════════════════════ -->
+      <section id="discountlog" class="section">
+        <div class="section-header">
+          <h2>🏷️ Discount Log</h2>
+          <div class="filters" style="margin:0;gap:8px;">
+            <label>From <input type="date" id="dlStart" style="width:140px;"></label>
+            <label>To <input type="date" id="dlEnd" style="width:140px;"></label>
+            <button id="dlApply" class="btn btn-primary btn-sm">Apply</button>
+            <button id="dlExportCsv" class="btn btn-secondary btn-sm">⬇ Export CSV</button>
+            <button id="dlClearBtn" class="btn btn-danger btn-sm" style="margin-left:auto;">🗑 Clear Log</button>
+          </div>
+        </div>
+        <div class="kpi-grid" style="margin-bottom:16px;">
+          <div class="card kpi kpi-red"><div class="kpi-title">Total Discounts Given</div><div id="dlTotalAmt" class="kpi-value">₱0.00</div></div>
+          <div class="card kpi"><div class="kpi-title">Discount Transactions</div><div id="dlTotalCount" class="kpi-value">0</div></div>
+          <div class="card kpi"><div class="kpi-title">Most Discounted Item</div><div id="dlTopItem" class="kpi-value" style="font-size:14px;">—</div></div>
+          <div class="card kpi kpi-red"><div class="kpi-title">Highest Single Discount</div><div id="dlMaxAmt" class="kpi-value">₱0.00</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div class="card">
+            <div class="card-header">🏆 Most Discounted Items (by ₱ total)</div>
+            <div class="table-wrapper" style="box-shadow:none;border:none;margin:0;max-height:300px;">
+              <table class="table" style="min-width:0;">
+                <thead><tr><th>#</th><th>Item</th><th>Category</th><th>Times</th><th>Total Qty</th><th>Total ₱ Saved</th><th>Avg per Order</th></tr></thead>
+                <tbody id="dlTopItemsTbody" class="zebra"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">📊 Discount by Type</div>
+            <div class="table-wrapper" style="box-shadow:none;border:none;margin:0;max-height:300px;">
+              <table class="table" style="min-width:0;">
+                <thead><tr><th>Type</th><th>Count</th><th>Total ₱ Saved</th></tr></thead>
+                <tbody id="dlByTypeTbody" class="zebra"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">📋 Full Discount History</div>
+          <div class="table-wrapper" style="box-shadow:none;border:none;margin:0;">
+            <table class="table">
+              <thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Original Price</th><th>Discount Type</th><th>Discount Value</th><th>₱ Saved</th><th>Done By</th><th>Sale ID</th></tr></thead>
+              <tbody id="dlLogTbody" class="zebra"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ SETTINGS ═══════════════════════════════════════ -->
+      <section id="settings" class="section">
+        <div class="section-header"><h2>Settings</h2></div>
+        <form id="settingsForm">
+          <fieldset>
+            <legend>General</legend>
+            <div class="form-grid">
+              <div class="form-row">
+                <label for="setCurrency">Currency Symbol</label>
+                <input type="text" id="setCurrency" value="₱" maxlength="3" style="max-width:80px;" />
+              </div>
+              <div class="form-row">
+                <label for="setLowStockThreshold">Low Stock Alert Threshold</label>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <input type="number" step="0.01" min="0.01" id="setLowStockThreshold" value="10" style="max-width:100px;" />
+                  <span style="font-size:12px;color:var(--muted);">Items at or below this qty will be flagged (min 0.01)</span>
+                </div>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Item Categories</legend>
+            <p style="font-size:12px;color:var(--muted);margin:0 0 10px;">Categories used in inventory items and sales</p>
+            <div class="chip-list" id="categoryChips"></div>
+            <div class="form-row inline" style="max-width:380px;">
+              <input type="text" id="newCategory" placeholder="e.g. Starters, Pasta, Burgers" />
+              <button type="button" id="addCategoryBtn" class="btn btn-secondary">Add</button>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Suppliers</legend>
+            <div class="chip-list" id="supplierChips"></div>
+            <div class="form-row inline" style="max-width:380px;">
+              <input type="text" id="newSupplier" placeholder="e.g. ABC Foods Supplier" />
+              <button type="button" id="addSupplierBtn" class="btn btn-secondary">Add</button>
+            </div>
+          </fieldset>
+
+          <!-- Account Management (owner-only) -->
+          <fieldset id="accountMgmtFieldset">
+            <legend>👤 Account Management</legend>
+            <p style="font-size:12px;color:var(--muted);margin:0 0 12px;">Manage staff and owner login accounts. Only the owner can access this.</p>
+            <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+              <button type="button" id="addAccountBtn" class="btn btn-primary" style="font-size:13px;">➕ Add Account</button>
+            </div>
+            <div class="table-wrap">
+              <table id="accountsTable">
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Display Name</th>
+                    <th>Role</th>
+                    <th style="text-align:center;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="accountsTbody">
+                  <tr><td colspan="4" style="text-align:center;color:var(--muted);">Loading accounts…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </fieldset>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">💾 Save Settings</button>
+          </div>
+        </form>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="app-footer">
+    &copy; <span id="year"></span> RESERVE &nbsp;·&nbsp; Alt+1–9 keyboard shortcuts
+  </footer>
+</div><!-- /appMain -->
+
+<!-- ══ ITEM DIALOG ═══════════════════════════════════════════ -->
+<dialog id="itemDialog">
+  <h3 id="itemDialogTitle">Add Item</h3>
+  <form id="itemForm">
+    <div class="form-row" style="margin-bottom:14px;">
+      <label for="itemInventoryType">Inventory Section</label>
+      <select id="itemInventoryType" required>
+        <option value="kitchen">🍳 Kitchen Stock</option>
+        <option value="beverage">🥤 Beverage Stock</option>
+        <option value="stockroom">📦 Stock Room</option>
+        <option value="pastry">🥐 Pastry Stock</option>
+        <option value="takeout">🥡 Takeout Stock</option>
+      </select>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label for="itemName">Item Name *</label><input id="itemName" required /></div>
+      <div class="form-row"><label for="itemCategory">Category</label><input id="itemCategory" list="categoryList" /></div>
+      <div class="form-row"><label for="itemUnit">Unit</label><input id="itemUnit" placeholder="pcs, kg, bottle…" /></div>
+      <div class="form-row"><label for="itemQty">Stock Qty *</label><input type="number" step="0.01" min="0" id="itemQty" required /></div>
+      <div class="form-row"><label for="itemCostPrice">Cost Price (₱)</label><input type="number" step="0.01" min="0" id="itemCostPrice" placeholder="0.00" /></div>
+      <div class="form-row"><label for="itemSellPrice">Sell Price (₱)</label><input type="number" step="0.01" min="0" id="itemSellPrice" placeholder="0.00" /></div>
+      <div class="form-row"><label for="itemReorderLevel">Low Stock Alert Level</label><input type="number" step="0.01" min="0" id="itemReorderLevel" placeholder="e.g. 0.25" /></div>
+      <div class="form-row"><label for="itemSupplier">Supplier</label><input id="itemSupplier" list="supplierList" /></div>
+      <div class="form-row"><label for="itemSupplierUse">Supplier Use / Purpose</label><input id="itemSupplierUse" placeholder="e.g. weekly delivery" /></div>
+      <div class="form-row"><label for="itemExpiry">Expiry Date</label><input type="date" id="itemExpiry" /></div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">💾 Save Item</button>
+      <button type="button" id="itemDialogCancel" class="btn btn-secondary">Cancel</button>
+    </div>
+    <input type="hidden" id="itemId" />
+  </form>
+</dialog>
+
+<!-- ══ RESTOCK DIALOG ════════════════════════════════════════ -->
+<dialog id="restockDialog">
+  <h3 id="restockDialogTitle">Restock Item</h3>
+  <form id="restockForm">
+    <div class="form-row" style="margin-bottom:12px;">
+      <label for="restockQty">Quantity to Add *</label>
+      <input type="number" step="0.01" min="0.01" id="restockQty" required placeholder="0" />
+    </div>
+    <div class="form-row" style="margin-bottom:16px;">
+      <label for="restockNote">Note (optional)</label>
+      <input type="text" id="restockNote" placeholder="e.g. delivery from supplier" />
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">📥 Restock</button>
+      <button type="button" id="restockDialogCancel" class="btn btn-secondary">Cancel</button>
+    </div>
+    <input type="hidden" id="restockItemId" />
+  </form>
+</dialog>
+
+<!-- ══ STAFF DIALOG ══════════════════════════════════════════ -->
+<dialog id="staffDialog">
+  <h3 id="staffDialogTitle">Add Staff</h3>
+  <form id="staffForm">
+    <div class="form-grid">
+      <div class="form-row"><label for="staffName">Full Name *</label><input id="staffName" required /></div>
+      <div class="form-row"><label for="staffPosition">Position / Role</label><input id="staffPosition" placeholder="e.g. Cook, Cashier" /></div>
+      <div class="form-row">
+        <label for="staffType">Employment Type</label>
+        <select id="staffType">
+          <option>Full-time</option><option>Part-time</option>
+          <option>Contractual</option><option>Hourly</option>
+        </select>
+      </div>
+      <div class="form-row"><label for="staffSalary">Monthly Salary (₱)</label><input type="number" step="0.01" min="0" id="staffSalary" placeholder="0.00" /></div>
+      <div class="form-row"><label for="staffHourlyRate">Hourly Rate (₱)</label><input type="number" step="0.01" min="0" id="staffHourlyRate" placeholder="0.00" /></div>
+      <div class="form-row"><label for="staffContact">Contact Number</label><input id="staffContact" placeholder="09XX-XXX-XXXX" /></div>
+      <div class="form-row"><label for="staffHireDate">Date Hired</label><input type="date" id="staffHireDate" /></div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">💾 Save</button>
+      <button type="button" id="staffDialogCancel" class="btn btn-secondary">Cancel</button>
+    </div>
+    <input type="hidden" id="staffId" />
+  </form>
+</dialog>
+
+<!-- ══ PAYROLL DIALOG ════════════════════════════════════════ -->
+<dialog id="payrollDialog">
+  <h3 id="payrollDialogTitle">Payroll Entry</h3>
+  <form id="payrollForm">
+
+    <!-- Staff + Period (full-width rows) -->
+    <div class="form-row payroll-full">
+      <label for="payrollStaffId">Staff Member *</label>
+      <select id="payrollStaffId" required><option value="">Select staff…</option></select>
+    </div>
+
+    <div class="form-row payroll-full">
+      <label>Pay Period *</label>
+      <div class="payroll-period-pair">
+        <input type="month" id="payrollPeriodMonth" required />
+        <select id="payrollCutoff" required>
+          <option value="1">1st cut-off (1–15)</option>
+          <option value="2">2nd cut-off (16–end)</option>
+        </select>
+      </div>
+    </div>
+    <input type="hidden" id="payrollPeriod" />
+
+    <!-- Hours + Base (2-col) -->
+    <div class="payroll-grid">
+      <div class="form-row">
+        <label for="payrollHours">Hours Worked *</label>
+        <input type="number" step="0.25" min="0" id="payrollHours" placeholder="e.g. 96" required />
+      </div>
+      <div class="form-row">
+        <label for="payrollBase">Base Pay (₱) <span class="payroll-auto-tag">auto</span></label>
+        <input type="number" step="0.01" min="0" id="payrollBase" placeholder="0.00"
+               readonly style="background:var(--bg);color:var(--muted);cursor:not-allowed;" />
+      </div>
+
+      <!-- Overtime (2-col) -->
+      <div class="form-row">
+        <label for="payrollOvertime">Overtime Pay (₱)</label>
+        <input type="number" step="0.01" min="0" id="payrollOvertime" value="0" />
+      </div>
+
+      <!-- Deductions group -->
+      <div class="form-row">
+        <label for="payrollCashAdvance">Cash Advance (₱)</label>
+        <input type="number" step="0.01" min="0" id="payrollCashAdvance" value="0" />
+      </div>
+      <div class="form-row" style="grid-column:span 2;">
+        <label for="payrollDeductions">Deductions — SSS / PhilHealth / Pag-IBIG (₱)</label>
+        <input type="number" step="0.01" min="0" id="payrollDeductions" value="0" />
+      </div>
+    </div>
+
+    <!-- Net Pay Preview -->
+    <div class="payroll-net-preview">
+      <span class="payroll-net-label">Net Pay</span>
+      <span id="payrollNetPreview" class="payroll-net-amount">₱0.00</span>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">💾 Save Payroll</button>
+      <button type="button" id="payrollDialogCancel" class="btn btn-secondary">Cancel</button>
+    </div>
+    <input type="hidden" id="payrollEntryId" />
+  </form>
+</dialog>
+
+<!-- ══ PAYSLIP DIALOG ════════════════════════════════════════ -->
+<dialog id="payslipDialog" style="max-width:440px;">
+  <div id="payslipContent"></div>
+  <div class="form-actions" style="margin-top:16px;">
+    <button id="payslipPrint" class="btn btn-primary">🖨️ Print</button>
+    <button id="payslipClose" class="btn btn-secondary">Close</button>
+  </div>
+</dialog>
+
+<datalist id="categoryList"></datalist>
+<datalist id="supplierList"></datalist>
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ══ ANTI-INSPECT ══════════════════════════════════════════ -->
+<script>
+  (function () {
+    // 1. Disable right-click context menu
+    document.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+    });
+
+    // 2. Block DevTools keyboard shortcuts
+    document.addEventListener('keydown', function (e) {
+      const key = e.key;
+      const ctrl = e.ctrlKey || e.metaKey;
+      const shift = e.shiftKey;
+
+      // F12
+      if (key === 'F12') { e.preventDefault(); return false; }
+      // Ctrl+Shift+I (Inspect)
+      if (ctrl && shift && (key === 'I' || key === 'i')) { e.preventDefault(); return false; }
+      // Ctrl+Shift+J (Console)
+      if (ctrl && shift && (key === 'J' || key === 'j')) { e.preventDefault(); return false; }
+      // Ctrl+Shift+C (Element picker)
+      if (ctrl && shift && (key === 'C' || key === 'c')) { e.preventDefault(); return false; }
+      // Ctrl+U (View source)
+      if (ctrl && (key === 'U' || key === 'u')) { e.preventDefault(); return false; }
+      // Ctrl+Shift+K (Firefox Console)
+      if (ctrl && shift && (key === 'K' || key === 'k')) { e.preventDefault(); return false; }
+    });
+
+    // 3. Detect DevTools open via window size change (desktop)
+    var devtoolsOpen = false;
+    var threshold = 160;
+    setInterval(function () {
+      var widthDiff  = window.outerWidth  - window.innerWidth;
+      var heightDiff = window.outerHeight - window.innerHeight;
+      if ((widthDiff > threshold || heightDiff > threshold) && !devtoolsOpen) {
+        devtoolsOpen = true;
+        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;font-size:22px;color:#ef4444;background:#0f172a;">⛔ Access Denied</div>';
+      }
+    }, 1000);
+
+    // 4. Detect debugger via timing trick
+    var _start = new Date();
+    debugger;
+    var _end = new Date();
+    if ((_end - _start) > 100) {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;font-size:22px;color:#ef4444;background:#0f172a;">⛔ Access Denied</div>';
+    }
+  })();
+</script>
+<!-- ══ END ANTI-INSPECT ══════════════════════════════════════ -->
+<!-- ══ ACCOUNT DIALOG ════════════════════════════════════════ -->
+<dialog id="accountDialog">
+  <h3 id="accountDialogTitle">Add Account</h3>
+  <form id="accountForm" autocomplete="off">
+    <div class="form-grid">
+      <div class="form-row">
+        <label for="accountUsername">Username *</label>
+        <input id="accountUsername" required autocomplete="new-password" placeholder="e.g. juan" />
+      </div>
+      <div class="form-row">
+        <label for="accountDisplayName">Display Name *</label>
+        <input id="accountDisplayName" required placeholder="e.g. Juan dela Cruz" />
+      </div>
+      <div class="form-row">
+        <label for="accountRole">Role *</label>
+        <select id="accountRole" required>
+          <option value="staff">Staff</option>
+          <option value="owner">Owner</option>
+        </select>
+      </div>
+      <div class="form-row" id="accountPasswordRow">
+        <label for="accountPassword">Password *</label>
+        <input type="password" id="accountPassword" autocomplete="new-password" placeholder="Enter password" />
+      </div>
+      <div class="form-row" id="accountNewPasswordRow" style="display:none;">
+        <label for="accountNewPassword">New Password <span style="font-size:11px;color:var(--muted);">(leave blank to keep current)</span></label>
+        <input type="password" id="accountNewPassword" autocomplete="new-password" placeholder="Leave blank to keep current" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" id="accountDialogSave">💾 Save Account</button>
+      <button type="button" id="accountDialogCancel" class="btn btn-secondary">Cancel</button>
+    </div>
+    <input type="hidden" id="accountEditId" />
+  </form>
+</dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+<script src="storage.js"></script>
+<script src="calc.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
